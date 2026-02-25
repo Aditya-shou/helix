@@ -27,7 +27,7 @@ class Project(Base):
     description: Mapped[str] = mapped_column(Text)
 
     goals: Mapped[str] = mapped_column(Text)
-
+    project_path: Mapped[str] = mapped_column(String)
     status: Mapped[str] = mapped_column(String, default="Not Started")
 
     progress_score: Mapped[float] = mapped_column(Float, default=0.0)
