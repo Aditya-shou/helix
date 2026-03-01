@@ -4,6 +4,7 @@ from langgraph.graph import END, StateGraph
 
 from agent.filesystem import analyze_project
 from agent.planner import create_plan
+from agent.reflection import reflect_on_plan
 from agent.state import AgentState
 from db.models import Project, SessionLocal
 
@@ -80,13 +81,15 @@ def build_graph():
     workflow.add_node("filesystem_analysis", filesystem_analysis)
     workflow.add_node("evaluate_progress", evaluate_progress)
     workflow.add_node("planner_node", planner_node)
+    workflow.add_node("reflection_node", reflection_node)
 
     workflow.set_entry_point("load_projects")
 
     workflow.add_edge("load_projects", "filesystem_analysis")
     workflow.add_edge("filesystem_analysis", "evaluate_progress")
     workflow.add_edge("evaluate_progress", "planner_node")
-    workflow.add_edge("planner_node", END)
+    workflow.add_edge("planner_node", "reflection_node")
+    workflow.add_edge("reflection_node", END)
 
     return workflow.compile()
 
@@ -115,5 +118,16 @@ def planner_node(state: AgentState):
     plan = create_plan(state["projects"])
 
     state["updates"].append("\nHelix Plan:\n" + plan)
+
+    return state
+
+
+def reflection_node(state: AgentState):
+    # last update contains planner output
+    last_update = state["updates"][-1]
+
+    refined_plan = reflect_on_plan(last_update, state["projects"])
+
+    state["updates"].append("\nHelix Reflection:\n" + refined_plan)
 
     return state
