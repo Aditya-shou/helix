@@ -20,12 +20,20 @@ def create_plan(projects):
 
     for p in projects:
         analysis = p.get("analysis", {})
+        code_info = p.get("code_info", {})
+        arch = p.get("architecture", {})
         summary += f"""
 Project: {p["name"]}
 Goals: {p["goals"]}
 Files: {analysis.get("files", 0)}
 Tests: {analysis.get("tests", 0)}
 CLI: {analysis.get("has_cli")}
+Classes: {code_info.get("total_classes", 0)}
+Functions: {code_info.get("total_functions", 0)}
+Models: {code_info.get("models", [])}
+Architecture:
+Entry Points: {arch.get("entry_points", [])}
+Dependencies: {list(arch.get("dependencies", {}).keys())[:10]}
 """
 
     prompt = f"""
