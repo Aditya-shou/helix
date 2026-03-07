@@ -1,23 +1,11 @@
 import json
+import logging
 import re
 
-from dotenv import load_dotenv
-from langchain_anthropic import ChatAnthropic
-
-# from langchain_openai import ChatOpenAI
+from agent.llm_provider import get_llm, invoke_with_retry
 from agent.tools import run_tool
 
-load_dotenv()
-
-llm = ChatAnthropic(
-    model_name="claude-haiku-4-5-20251001",
-    temperature=0,
-)  # pyright: ignore[reportCallIssue]
-
-# llm = ChatOpenAI(
-#     model="gpt-4o-mini",
-#     temperature=0.2,
-# )
+logger = logging.getLogger(__name__)
 
 SYSTEM_PROMPT = """
 You are Helix, an autonomous engineering agent.
@@ -42,39 +30,34 @@ Respond ONLY in JSON:
 
 
 def autonomous_step(project_path: str, memory: dict):
-    # Tell the LLM exactly what we already know
+    llm = get_llm("autonomous")
+
     already_known = [k for k in ["filesystem", "code", "architecture"] if k in memory]
 
-    prompt = f"""
-        Project path: {project_path}
-        Already gathered (do NOT re-run these tools): {already_known}
-        Current memory:
-        {json.dumps({k: v for k, v in memory.items() if k != "history"}, indent=2)}
-    """
+    prompt = (
+        SYSTEM_PROMPT
+        + f"\n\nProject path: {project_path}"
+        + f"\nAlready gathered (do NOT re-run these tools): {already_known}"
+        + f"\nCurrent memory:\n{json.dumps({k: v for k, v in memory.items() if k != 'history'}, indent=2)}"
+    )
 
-    response = llm.invoke(SYSTEM_PROMPT + prompt)
-    content = response.content
-
-    if isinstance(content, list):
-        content = "".join(str(x) for x in content)
-
-    decision = extract_json(content)
+    logger.debug("Autonomous step — known tools: %s", already_known)
+    content = invoke_with_retry(llm, prompt)
+    decision = _extract_json(content)
 
     tool = decision.get("tool", "none")
 
-    # Guard: skip if tool already ran
     if tool != "none" and tool not in memory:
         result = run_tool(tool, project_path)
         memory[tool] = result
     elif tool != "none" and tool in memory:
-        print(f"[Helix] Skipping '{tool}' — already in memory.")
+        logger.info("Skipping '%s' — already in memory.", tool)
 
     return decision, memory
 
 
-def extract_json(text: str):
-    """Extract JSON object from LLM response."""
+def _extract_json(text: str) -> dict:
     match = re.search(r"\{.*\}", text, re.DOTALL)
     if not match:
-        raise ValueError("No JSON found in LLM output")
+        raise ValueError(f"No JSON found in LLM output: {text[:200]}")
     return json.loads(match.group())
