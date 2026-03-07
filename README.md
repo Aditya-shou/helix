@@ -298,7 +298,7 @@ tail -f .logs/backend.log
 - [ ] Git history analysis tool (detect recent changes, commit frequency)
 - [ ] Test coverage detection (parse pytest-cov output)
 - [ ] Dependency vulnerability scanning
-- [ ] Project path picker in the UI (no more editing reset_and_seed.py)
+- [ ] Project path picker in the UI
 - [ ] Multi-user support
 - [ ] Tauri desktop app (no browser required)
 - [ ] Project Gutenberg / Open Library book search
