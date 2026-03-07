@@ -3,3 +3,9 @@ venv
 /db/database.db
 /db/__pycache__
 /agent/__pycache__
+/backend/__pycache__
+/frontend/dist
+/frontend/node_modules
+/frontend/package-lock.json
+/uploads
+.logs

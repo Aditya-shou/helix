@@ -4,6 +4,7 @@ import re
 from dotenv import load_dotenv
 from langchain_anthropic import ChatAnthropic
 
+# from langchain_openai import ChatOpenAI
 from agent.tools import run_tool
 
 load_dotenv()
@@ -12,6 +13,11 @@ llm = ChatAnthropic(
     model_name="claude-haiku-4-5-20251001",
     temperature=0,
 )  # pyright: ignore[reportCallIssue]
+
+# llm = ChatOpenAI(
+#     model="gpt-4o-mini",
+#     temperature=0.2,
+# )
 
 SYSTEM_PROMPT = """
 You are Helix, an autonomous engineering agent.

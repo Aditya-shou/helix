@@ -1,23 +1,14 @@
-from dotenv import load_dotenv
+import logging
 
-# from langchain_anthropic import ChatAnthropic
-from langchain_openai import ChatOpenAI
+from agent.llm_provider import get_llm, invoke_with_retry
 
-load_dotenv()
-
-
-planner_llm = ChatOpenAI(
-    model="gpt-4o-mini",
-    temperature=0.2,
-)
-
-# alternative:
-# planner_llm = ChatAnthropic(model="claude-3-haiku-20240307")
+logger = logging.getLogger(__name__)
 
 
-def create_plan(projects):
+def create_plan(projects: list) -> str:
+    llm = get_llm("planner")
+
     summary = ""
-
     for p in projects:
         analysis = p.get("analysis", {})
         code_info = p.get("code_info", {})
@@ -31,7 +22,6 @@ CLI: {analysis.get("has_cli")}
 Classes: {code_info.get("total_classes", 0)}
 Functions: {code_info.get("total_functions", 0)}
 Models: {code_info.get("models", [])}
-Architecture:
 Entry Points: {arch.get("entry_points", [])}
 Dependencies: {list(arch.get("dependencies", {}).keys())[:10]}
 """
@@ -52,12 +42,5 @@ Projects:
 Return bullet points only.
 """
 
-    response = planner_llm.invoke(prompt)
-
-    content = response.content
-
-    # Normalize to string
-    if isinstance(content, list):
-        content = "\n".join(str(c) for c in content)
-
-    return str(content)
+    logger.debug("Creating plan for %d project(s)", len(projects))
+    return invoke_with_retry(llm, prompt)

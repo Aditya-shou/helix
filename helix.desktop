@@ -1,0 +1,12 @@
+[Desktop Entry]
+Version=1.0
+Type=Application
+Name=Helix
+Comment=Your personal engineering and reading OS
+# Update this path to your actual helix/ directory:
+Exec=bash /home/dazai/codeBase/project/helix/start.sh
+Icon=/home/dazai/codeBase/project/helix/helix.png
+Terminal=false
+Categories=Development;Utility;
+StartupNotify=true
+Keywords=helix;engineering;books;tasks;

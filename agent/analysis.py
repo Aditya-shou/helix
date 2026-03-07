@@ -1,43 +1,35 @@
 import json
+import logging
 
-from dotenv import load_dotenv
-from langchain_anthropic import ChatAnthropic
+from agent.llm_provider import get_llm, invoke_with_retry
 
-load_dotenv()
-
-analysis_llm = ChatAnthropic(
-    model_name="claude-haiku-4-5-20251001",
-    temperature=0,
-)  # pyright: ignore[reportCallIssue]
+logger = logging.getLogger(__name__)
 
 SYSTEM_PROMPT = """
 You are Helix, a senior software architect.
 
-Analyze the project understanding and suggest:
-1. Improvements
-2. Missing components
-3. Architectural risks
-4. Next engineering tasks
+Analyze the project and return ONLY this structure — nothing else:
 
-Be specific and actionable.
+RISKS (max 3 bullet points):
+- ...
+
+MISSING (max 3 bullet points):
+- ...
+
+NEXT TASKS (max 5, most important first):
+- ...
+
+Rules:
+- Each bullet point is ONE line maximum
+- If progress_delta shows something improved, do NOT suggest it again
+- No headers beyond the three above, no markdown tables, no long explanations
 """
 
 
 def analyze_project(memory: dict) -> str:
+    llm = get_llm("analysis")
 
-    prompt = f"""
-Project understanding:
+    prompt = SYSTEM_PROMPT + f"\n\nProject data:\n{json.dumps(memory, indent=2)}"
 
-{json.dumps(memory, indent=2)}
-
-Provide a structured improvement analysis.
-"""
-
-    response = analysis_llm.invoke(SYSTEM_PROMPT + prompt)
-
-    content = response.content
-
-    if isinstance(content, list):
-        content = "".join(str(x) for x in content)
-
-    return content
+    logger.debug("Running project analysis")
+    return invoke_with_retry(llm, prompt)

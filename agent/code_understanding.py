@@ -19,7 +19,6 @@ def analyze_python_file(file_path: Path):
         if isinstance(node, ast.ClassDef):
             classes.append(node.name)
 
-            # detect SQLAlchemy model
             for base in node.bases:
                 if getattr(base, "id", "") == "Base":
                     sqlalchemy_models.append(node.name)

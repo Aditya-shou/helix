@@ -1,0 +1,13 @@
+langchain-anthropic
+langchain-openai
+langgraph
+fastapi
+uvicorn[standard]
+python-multipart
+sqlalchemy
+pydantic-settings
+pypdf
+tenacity
+pathspec
+rich
+python-dotenv

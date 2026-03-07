@@ -1,8 +1,10 @@
 from rich import print
 
 from agent.graph import build_graph
+from agent.logging_config import setup_logging
 from agent.state import AgentState
 
+setup_logging()
 agent = build_graph()
 
 state: AgentState = {
